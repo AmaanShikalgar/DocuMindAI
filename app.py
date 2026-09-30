@@ -11,6 +11,8 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+MODEL_NAME = "openai/gpt-oss-120b"
+
 def split_into_chunks(text, chunk_size=500, overlap=100):
     chunks = []
     step = chunk_size - overlap
@@ -131,7 +133,7 @@ Answer:
 
         with st.spinner("Thinking..."):
             response = client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model=MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}]
             )
 
