@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "date": "2026-11-26",
+    "n_questions": 48,
+    "n_answerable": 42,
+    "n_unanswerable": 6,
+    "n_docs": 3,
+    "embed_model": "all-MiniLM-L6-v2",
+    "rerank_model": "ms-marco-TinyBERT-L-2-v2",
+    "llm_model": "openai/gpt-oss-120b",
+    "k": 5
+  },
+  "retrieval": {
+    "fixed + dense": {
+      "chunking": "fixed",
+      "retrieval": "dense",
+      "rerank": false,
+      "hit@5": 0.738,
+      "mrr@5": 0.541,
+      "retrieval_ms_p50": 42.7
+    },
+    "fixed + dense + rerank": {
+      "chunking": "fixed",
+      "retrieval": "dense",
+      "rerank": true,
+      "hit@5": 0.833,
+      "mrr@5": 0.558,
+      "retrieval_ms_p50": 215.2
+    },
+    "fixed + bm25": {
+      "chunking": "fixed",
+      "retrieval": "bm25",
+      "rerank": false,
+      "hit@5": 0.786,
+      "mrr@5": 0.597,
+      "retrieval_ms_p50": 4.2
+    },
+    "fixed + bm25 + rerank": {
+      "chunking": "fixed",
+      "retrieval": "bm25",
+      "rerank": true,
+      "hit@5": 0.881,
+      "mrr@5": 0.597,
+      "retrieval_ms_p50": 204.6
+    },
+    "fixed + hybrid": {
+      "chunking": "fixed",
+      "retrieval": "hybrid",
+      "rerank": false,
+      "hit@5": 0.929,
+      "mrr@5": 0.669,
+      "retrieval_ms_p50": 44.7
+    },
+    "fixed + hybrid + rerank": {
+      "chunking": "fixed",
+      "retrieval": "hybrid",
+      "rerank": true,
+      "hit@5": 0.881,
+      "mrr@5": 0.597,
+      "retrieval_ms_p50": 195.6
+    },
+    "structure + dense": {
+      "chunking": "structure",
+      "retrieval": "dense",
+      "rerank": false,
+      "hit@5": 0.81,
+      "mrr@5": 0.53,
+      "retrieval_ms_p50": 35.5
+    },
+    "structure + dense + rerank": {
+      "chunking": "structure",
+      "retrieval": "dense",
+      "rerank": true,
+      "hit@5": 0.905,
+      "mrr@5": 0.672,
+      "retrieval_ms_p50": 289.4
+    },
+    "structure + bm25": {
+      "chunking": "structure",
+      "retrieval": "bm25",
+      "rerank": false,
+      "hit@5": 0.857,
+      "mrr@5": 0.617,
+      "retrieval_ms_p50": 1.9
+    },
+    "structure + bm25 + rerank": {
+      "chunking": "structure",
+      "retrieval": "bm25",
+      "rerank": true,
+      "hit@5": 0.976,
+      "mrr@5": 0.698,
+      "retrieval_ms_p50": 260.4
+    },
+    "structure + hybrid": {
+      "chunking": "structure",
+      "retrieval": "hybrid",
+      "rerank": false,
+      "hit@5": 0.905,
+      "mrr@5": 0.617,
+      "retrieval_ms_p50": 41.6
+    },
+    "structure + hybrid + rerank": {
+      "chunking": "structure",
+      "retrieval": "hybrid",
+      "rerank": true,
+      "hit@5": 0.952,
+      "mrr@5": 0.696,
+      "retrieval_ms_p50": 307.5
+    }
+  },
+  "answers": {}
+}

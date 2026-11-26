@@ -7,18 +7,56 @@ retrieval choice in the pipeline was measured on a fixed eval set before it went
 
 ## Results
 
-Measured on 40-50 hand-written questions with reference answers and evidence passages,
-across 3-4 PDFs. See [eval/README.md](eval/README.md) for how questions were written and how
+**Retrieval hit-rate went from 74% (v1) to 95% (v2)**: the share of questions where the
+passage that answers them is among the 5 sources given to the model. Measured on 48
+hand-written questions over three public PDFs: a security framework, a tax publication and a
+research paper. See [eval/README.md](eval/README.md) for how the questions were written and how
 each metric is defined.
 
 <!-- EVAL:START -->
-_Not run yet. Add PDFs to `eval/docs/` and questions to `eval/questions.jsonl`, then run
-`python eval/run_eval.py --update-readme`._
+_48 questions (42 answerable, 6 unanswerable) over 3 PDFs · embeddings `all-MiniLM-L6-v2` · reranker `ms-marco-TinyBERT-L-2-v2` · LLM `openai/gpt-oss-120b` · run 2026-11-26_
+
+**Retrieval** (answerable questions; hit = a top-k chunk covers the evidence passage)
+
+| Config | Hit@5 | MRR@5 | Retrieval p50 |
+|---|---|---|---|
+| fixed + dense (v1 baseline) | 74% | 0.54 | 43 ms |
+| fixed + dense + rerank | 83% | 0.56 | 215 ms |
+| fixed + bm25 | 79% | 0.60 | 4 ms |
+| fixed + bm25 + rerank | 88% | 0.60 | 205 ms |
+| fixed + hybrid | 93% | 0.67 | 45 ms |
+| fixed + hybrid + rerank | 88% | 0.60 | 196 ms |
+| structure + dense | 81% | 0.53 | 36 ms |
+| structure + dense + rerank | 90% | 0.67 | 289 ms |
+| structure + bm25 | 86% | 0.62 | 2 ms |
+| structure + bm25 + rerank | **98%** | 0.70 | 260 ms |
+| structure + hybrid | 90% | 0.62 | 42 ms |
+| structure + hybrid + rerank (v2 default) | 95% | 0.70 | 308 ms |
 <!-- EVAL:END -->
 
 **v1 baseline** is the original app: 500-character windows with 100-character overlap, dense
 FAISS search only. **v2 default** is structure-aware chunks, hybrid BM25 + FAISS search, and a
 cross-encoder reranker.
+
+What the numbers say:
+
+- **Most changes help on their own.** Structure-aware chunks beat fixed windows with dense
+  search (81% vs 74%) and with BM25 (86% vs 79%). BM25 beats dense search on these documents,
+  which are full of exact terms like `DE.CM-06`, "Form 2106" and "70 cents". Hybrid search
+  beats either alone before reranking.
+- **The changes work best together.** Without a reranker, fixed windows with hybrid search
+  (93%) edge out structure-aware chunks (90%). With the reranker, structure-aware chunks gain 5
+  to 12 points in every search mode. Fixed windows with hybrid search lose 5 points; a likely
+  reason is that 500-character windows cut sentences in half and the reranker scores those
+  fragments poorly.
+- **Why hybrid, when BM25 + rerank scored higher?** Structure + BM25 + rerank scored 98%, one
+  question more than the default. Hybrid stays the default because its dense half covers
+  questions phrased differently from the text, which this eval set has fewer of than real use.
+- **Small sample.** With 42 answerable questions, each one is worth 2.4 points, so treat
+  differences of a question or two as noise.
+
+Answer accuracy (judged by an LLM) is measured by the same script with `GROQ_API_KEY` set:
+`python eval/run_eval.py --update-readme`.
 
 ## What's in it
 
@@ -29,8 +67,10 @@ cross-encoder reranker.
 - **Hybrid search.** BM25 catches exact terms, codes and names. MiniLM embeddings in FAISS catch
   paraphrases. Reciprocal Rank Fusion merges the two lists, so their score scales never need to
   be compared.
-- **Reranker.** `ms-marco-MiniLM-L-6-v2` rescores the top 30 fused candidates against the question
-  and keeps the best 5.
+- **Reranker.** A cross-encoder rescores the top 20 fused candidates against the question and
+  keeps the best 5. It uses the 2-layer `ms-marco-TinyBERT-L-2-v2`: on the eval set it finds the
+  evidence as often as the 6-layer `ms-marco-MiniLM-L-6-v2` (95% hit@5), with slightly lower MRR
+  (0.70 vs 0.73), and takes about 0.3 s on a CPU instead of about 4 s.
 - **Citations to the passage.** Every chunk stores its character offsets on the page, and every
   offset maps back to a rectangle on the PDF page. The model cites sources as `[n]`. Clicking a
   citation opens the rendered page with the passage highlighted.

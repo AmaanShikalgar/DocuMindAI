@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
  && pip install --no-cache-dir -r requirements.txt
 # bake the embedding and reranker models into the image so the first query isn't a download
 RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; \
-SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
+SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); CrossEncoder('cross-encoder/ms-marco-TinyBERT-L-2-v2')"
 COPY backend/documind ./documind
 # Demo documents: indexed at build time so a fresh container (or a Space waking up) is ready
 # at once. Visitors' uploads stay private to their browser (PRIVATE_UPLOADS).
