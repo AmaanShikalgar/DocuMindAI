@@ -1,136 +1,131 @@
-# 📄 DocuMind AI
+# DocuMind v2
 
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0ea5e9,100:1e293b&height=200&section=header&text=DocuMind%20AI&fontSize=40&fontColor=ffffff&animation=fadeIn" />
-</p>
+Ask questions about your PDFs and get answers that cite the exact page and passage. Each
+retrieval choice in the pipeline was measured on a fixed eval set before it went in.
 
-<p align="center">
-AI-powered Document Question Answering System using Retrieval-Augmented Generation (RAG)
-</p>
+**Live demo:** _coming soon_ · v1 (Streamlit): https://rag-pdf-chatbot-amaan.streamlit.app/
 
----
+## Results
 
-## 📸 Live Demo
-https://rag-pdf-chatbot-amaan.streamlit.app/
+Measured on 40-50 hand-written questions with reference answers and evidence passages,
+across 3-4 PDFs. See [eval/README.md](eval/README.md) for how questions were written and how
+each metric is defined.
 
----
+<!-- EVAL:START -->
+_Not run yet. Add PDFs to `eval/docs/` and questions to `eval/questions.jsonl`, then run
+`python eval/run_eval.py --update-readme`._
+<!-- EVAL:END -->
 
-## ⚡ Features
+**v1 baseline** is the original app: 500-character windows with 100-character overlap, dense
+FAISS search only. **v2 default** is structure-aware chunks, hybrid BM25 + FAISS search, and a
+cross-encoder reranker.
 
-- Chat with any PDF document  
-- Semantic search using FAISS  
-- Embedding generation via Sentence Transformers  
-- Context-aware responses using LLaMA 3 (Groq API)  
-- Page-level source tracking  
-- Chat history support  
-- Streamlit interactive UI  
+## What's in it
 
----
+- **Two chunkers.** _Fixed_ reproduces v1. _Structure-aware_ reads font sizes and weights from the
+  PDF to find headings, groups paragraphs under their heading up to about 900 characters, never
+  crosses a heading, and splits long paragraphs at sentence ends. The heading is prepended to the
+  text that gets indexed, so a chunk about "Refund Policy" can be found by that phrase.
+- **Hybrid search.** BM25 catches exact terms, codes and names. MiniLM embeddings in FAISS catch
+  paraphrases. Reciprocal Rank Fusion merges the two lists, so their score scales never need to
+  be compared.
+- **Reranker.** `ms-marco-MiniLM-L-6-v2` rescores the top 30 fused candidates against the question
+  and keeps the best 5.
+- **Citations to the passage.** Every chunk stores its character offsets on the page, and every
+  offset maps back to a rectangle on the PDF page. The model cites sources as `[n]`. Clicking a
+  citation opens the rendered page with the passage highlighted.
+- **Streaming.** Answers stream token by token over server-sent events. Sources arrive first, so
+  citations work the moment they appear.
+- **Observability.** Every query is logged to SQLite with its retrieved chunks (and their dense and
+  BM25 ranks), latency split into retrieval, rerank, first token and total, token counts, and cost.
+  The `/dashboard` page shows these as p50/p95 tiles, a per-query latency breakdown and a
+  query log you can expand to see each query's retrieved chunks.
 
-## 🧠 How It Works
+## Architecture
 
-1. Upload PDF  
-2. Extract text  
-3. Split into chunks  
-4. Convert chunks into embeddings  
-5. Store embeddings in FAISS index  
-6. Convert query into embedding  
-7. Retrieve most relevant chunks  
-8. Send context to LLM  
-9. Generate grounded answer  
+```
+PDF ──► PyMuPDF (text + font sizes + bounding boxes)
+          ├─► fixed chunker ──────┐
+          └─► structure chunker ──┴─► MiniLM embeddings ─► FAISS
+                                  └─► BM25
+question ─► FAISS top-30 ┐
+          ─► BM25 top-30 ┴─► RRF ─► cross-encoder rerank ─► top-5 ─► Groq LLM (streamed, cites [n])
+                                                                        │
+                                       SQLite query log ◄───────────────┘  ─► /dashboard
+```
 
----
+| Path | What |
+|---|---|
+| `backend/documind/pdf.py` | Layout-preserving parsing, offset → rectangle mapping |
+| `backend/documind/chunking.py` | Fixed and structure-aware chunkers |
+| `backend/documind/retrieval.py` | Dense, BM25, hybrid (RRF), reranker |
+| `backend/documind/pipeline.py` | Retrieve → prompt → stream, shared by the API and the eval |
+| `backend/documind/api.py` | FastAPI: documents, `/api/query` (SSE), metrics, static front end |
+| `backend/documind/obs.py` | SQLite query log and summary stats |
+| `frontend/` | React + Vite: chat with citations, page viewer, dashboard |
+| `eval/` | Question set, harness, results |
 
-## 🏗️ Architecture
+## Run it
 
-PDF → Text Extraction → Chunking → Embeddings → FAISS Index → Retrieval → LLM (LLaMA 3) → Answer
+### Docker
 
----
+```powershell
+copy .env.example .env   # then put your GROQ_API_KEY in .env
+docker compose up --build
+```
 
-## 🛠️ Tech Stack
+Open http://localhost:8000. Uploaded PDFs and the query log persist in the `documind-data` volume.
 
-**Backend / AI:**
-- Python  
-- FAISS  
-- Sentence Transformers  
-- PyPDF2  
-- Groq API (LLaMA 3.3)
+### Local development
 
-**Frontend:**
-- Streamlit  
+```powershell
+python -m venv .venv
+.venv\Scripts\pip install torch --index-url https://download.pytorch.org/whl/cpu
+.venv\Scripts\pip install -r backend\requirements-dev.txt
+cd backend; ..\.venv\Scripts\uvicorn documind.api:app --reload --port 8000
+```
 
-**Concept:**
-- Retrieval-Augmented Generation (RAG)
+In a second terminal:
 
----
+```powershell
+cd frontend; npm install; npm run dev
+```
 
-## 📁 Project Structure
+Open http://localhost:5173. Vite proxies `/api` to the backend.
 
-DocuMind-AI/  
-├── app.py  
-├── requirements.txt  
-├── .env (ignored)  
-├── README.md  
-└── screenshots/  
-&nbsp;&nbsp;&nbsp;&nbsp;└── demo.png  
+### Tests
 
----
+```powershell
+cd backend; ..\.venv\Scripts\python -m pytest
+```
 
-## 🚀 Run Locally
+The tests use a small generated PDF and stand-in models, so they run offline in a few seconds.
 
-### Clone repository
-git clone https://github.com/your-username/DocuMind-AI.git  
-cd DocuMind-AI  
+### Eval
 
-### Create virtual environment
-python -m venv venv  
-venv\Scripts\activate  
+```powershell
+.venv\Scripts\python eval\run_eval.py --check
+.venv\Scripts\python eval\run_eval.py --update-readme
+```
 
-### Install dependencies
-pip install -r requirements.txt  
+## Deploy
 
-### Add environment variables
-GROQ_API_KEY=your_api_key_here  
+The image serves both the API and the front end on one port, so it runs on any container host.
+A Hugging Face Docker Space (free CPU tier, 16 GB RAM) works well:
 
-### Run app
-streamlit run app.py  
+1. Create a Space with the **Docker** SDK and push this repo to it.
+2. Add `GROQ_API_KEY` as a secret and `PORT=7860` as a variable.
+3. Add `app_port: 7860` to the Space's README front matter.
 
----
+Each client is limited to 30 questions per 10 minutes (`RATE_LIMIT_QUERIES`) and 10 uploads per
+hour, so a public demo can't drain the API key.
 
-## 🔑 API Key
-https://console.groq.com
+## Configuration
 
----
+See [.env.example](.env.example). Retrieval defaults (`CHUNKING`, `RETRIEVAL`, `RERANK`, `TOP_K`)
+apply to the API. The front end can switch them per question, so you can compare configurations
+live. Token prices for cost tracking are set by `LLM_PRICE_IN_PER_M` and `LLM_PRICE_OUT_PER_M`.
 
-## 📚 What is RAG?
+## Author
 
-Retrieval-Augmented Generation (RAG) is a technique where:
-
-- Relevant information is retrieved from documents  
-- That context is given to an LLM  
-- The model generates grounded responses  
-
-This reduces hallucination and improves factual accuracy.
-
----
-
-## 💡 Key Learnings
-
-- Vector embeddings and semantic search  
-- FAISS-based retrieval systems  
-- LLM integration with external context  
-- Prompt engineering for grounding responses  
-- End-to-end AI system design  
-
----
-
-## 👨‍💻 Author
-
-**Amaan Shikalgar**  
-Full Stack & AI Developer  
-
----
-
-## ⭐ Support
-
-If you like this project, please give it a ⭐ on GitHub.
+**Amaan Shikalgar**, Full Stack & AI Developer
