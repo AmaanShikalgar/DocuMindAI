@@ -6,3 +6,13 @@ __pycache__/
 rag.py
 *.pdf
 test.py
+.venv/
+node_modules/
+frontend/dist/
+data/
+backend/static/
+backend/tests/.data/
+eval/.cache/
+# eval PDFs are committed so the numbers are reproducible
+!eval/docs/*.pdf
+*.tsbuildinfo
