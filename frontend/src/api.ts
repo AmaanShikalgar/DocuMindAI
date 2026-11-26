@@ -5,6 +5,7 @@ export type Doc = {
   num_pages: number;
   num_chunks: Record<string, number>;
   created_at: number;
+  demo: boolean;
 };
 
 export type Source = {
@@ -45,7 +46,21 @@ export type Config = {
   defaults: QueryOpts;
   options: { chunking: string[]; retrieval: string[] };
   max_upload_mb: number;
+  sample_questions: string[];
+  private_uploads: boolean;
 };
+
+/** A random id per browser. On the public demo it keeps each visitor's uploads and query log
+ * private to them; it is not an account and identifies nothing. */
+function clientId(): string {
+  let id = localStorage.getItem("documind-client");
+  if (!id) {
+    id = crypto.randomUUID?.() ?? Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 10)).join("-");
+    localStorage.setItem("documind-client", id);
+  }
+  return id;
+}
+const H = (): Record<string, string> => ({ "X-Client-Id": clientId() });
 
 async function json<T>(r: Response): Promise<T> {
   if (!r.ok) {
@@ -62,15 +77,15 @@ async function json<T>(r: Response): Promise<T> {
 
 export const api = {
   config: () => fetch("/api/config").then((r) => json<Config>(r)),
-  docs: () => fetch("/api/documents").then((r) => json<Doc[]>(r)),
+  docs: () => fetch("/api/documents", { headers: H() }).then((r) => json<Doc[]>(r)),
   upload: (f: File) => {
     const body = new FormData();
     body.append("file", f);
-    return fetch("/api/documents", { method: "POST", body }).then((r) => json<Doc>(r));
+    return fetch("/api/documents", { method: "POST", body, headers: H() }).then((r) => json<Doc>(r));
   },
-  remove: (id: string) => fetch(`/api/documents/${id}`, { method: "DELETE" }),
+  remove: (id: string) => fetch(`/api/documents/${id}`, { method: "DELETE", headers: H() }),
   summary: (days = 30) => fetch(`/api/metrics/summary?days=${days}`).then((r) => json<Summary>(r)),
-  queries: (limit = 50) => fetch(`/api/queries?limit=${limit}`).then((r) => json<LoggedQuery[]>(r)),
+  queries: (limit = 50) => fetch(`/api/queries?limit=${limit}`, { headers: H() }).then((r) => json<LoggedQuery[]>(r)),
   pageUrl: (doc: string, page: number) => `/api/documents/${doc}/pages/${page}.png`,
   fileUrl: (doc: string, page: number) => `/api/documents/${doc}/file#page=${page}`,
 };
@@ -83,7 +98,7 @@ export async function ask(
 ) {
   const r = await fetch("/api/query", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...H() },
     body: JSON.stringify(body),
     signal,
   });

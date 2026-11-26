@@ -111,14 +111,32 @@ The tests use a small generated PDF and stand-in models, so they run offline in 
 ## Deploy
 
 The image serves both the API and the front end on one port, so it runs on any container host.
-A Hugging Face Docker Space (free CPU tier, 16 GB RAM) works well:
+The live demo runs on a Hugging Face Docker Space (free CPU tier), deployed by
+[a GitHub Action](.github/workflows/deploy-hf-space.yml) on every push to `master`.
 
-1. Create a Space with the **Docker** SDK and push this repo to it.
-2. Add `GROQ_API_KEY` as a secret and `PORT=7860` as a variable.
-3. Add `app_port: 7860` to the Space's README front matter.
+One-time setup:
 
-Each client is limited to 30 questions per 10 minutes (`RATE_LIMIT_QUERIES`) and 10 uploads per
-hour, so a public demo can't drain the API key.
+1. On Hugging Face, create a Space with the **Docker** SDK (blank template).
+2. In the Space's settings, add the secret `GROQ_API_KEY`.
+3. Create a Hugging Face access token with **write** permission.
+4. In this GitHub repo's settings, add that token as the Actions secret `HF_TOKEN`. Then add the
+   Actions variable `HF_SPACE` with the Space's name, like `your-hf-username/documind`.
+5. Run the workflow once from the Actions tab, or push to `master`.
+
+The workflow mirrors the repo to the Space and swaps in [deploy/hf-space/README.md](deploy/hf-space/README.md),
+which holds the settings Hugging Face reads.
+
+How the public demo behaves:
+
+- **Preloaded documents.** The three eval PDFs are indexed when the image is built, so the demo
+  is ready as soon as the container starts. Visitors can't remove them.
+- **Private uploads.** Each browser gets a random ID (`PRIVATE_UPLOADS=true`). Visitors see
+  only their own uploads and their own query log; dashboard totals cover everyone.
+- **Rate limits.** Each visitor can ask 30 questions per 10 minutes (`RATE_LIMIT_QUERIES`) and
+  upload 10 PDFs per hour, so the demo can't drain the API key. Also set a spending limit in the
+  Groq console.
+- **No persistence.** Free Spaces don't keep files between restarts, so uploads disappear when
+  the Space sleeps or restarts.
 
 ## Configuration
 

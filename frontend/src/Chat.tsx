@@ -107,9 +107,9 @@ export default function Chat() {
     setSelected((s) => new Set([...s].filter((x) => x !== id)));
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const question = q.trim();
+  async function submit(e?: React.FormEvent, preset?: string) {
+    e?.preventDefault();
+    const question = (preset ?? q).trim();
     if (!question || busy) return;
     setQ("");
     setBusy(true);
@@ -166,9 +166,13 @@ export default function Chat() {
                   <span className="doc-title">{d.title}</span>
                 </label>
                 <span className="mono muted">{d.num_pages} pp</span>
-                <button className="icon-btn" aria-label={`Remove ${d.title}`} onClick={() => remove(d.id)}>
-                  <XIcon />
-                </button>
+                {d.demo ? (
+                  <span className="icon-btn" aria-hidden="true" />
+                ) : (
+                  <button className="icon-btn" aria-label={`Remove ${d.title}`} onClick={() => remove(d.id)}>
+                    <XIcon />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -215,6 +219,16 @@ export default function Chat() {
               <p>
                 Every answer cites the page it came from. Select a <span className="cite">1</span> to see the passage highlighted on that page.
               </p>
+              {!!cfg?.sample_questions.length && docs.length > 0 && (
+                <div className="samples">
+                  {cfg.sample_questions.map((s) => (
+                    <button key={s} className="sample" onClick={() => submit(undefined, s)} disabled={busy}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {cfg?.private_uploads && <p className="small muted">PDFs you upload are visible only in this browser</p>}
             </div>
           )}
           {turns.map((t, i) => (

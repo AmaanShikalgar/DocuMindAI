@@ -18,6 +18,11 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; \
 SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
 COPY backend/documind ./documind
+# Demo documents: indexed at build time so a fresh container (or a Space waking up) is ready
+# at once. Visitors' uploads stay private to their browser (PRIVATE_UPLOADS).
+COPY eval/docs/*.pdf deploy/demo/demo.json ./demo/
+ENV DEMO_DIR=/app/demo PRIVATE_UPLOADS=true
+RUN python -c "from pathlib import Path; from documind.store import DocumentStore; DocumentStore().load_demo(Path('/app/demo'))"
 COPY --from=web /web/dist ./static
 RUN useradd -m -u 1000 app && mkdir -p /data && chown -R app /data /models
 USER app

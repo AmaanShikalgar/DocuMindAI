@@ -16,7 +16,7 @@ from . import pipeline
 from .config import settings
 from .llm import LLM
 from .obs import QueryLog
-from .store import STRATEGIES, DocumentStore
+from .store import STRATEGIES, DocumentStore, public_meta
 
 MODES = ("dense", "bm25", "hybrid")
 
@@ -68,15 +68,24 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
 
     from . import retrieval
 
+    # Public demo settings. DEMO_DIR: PDFs indexed at startup and shown to every visitor.
+    # PRIVATE_UPLOADS: each browser (X-Client-Id header) sees only its own uploads and queries.
+    demo_dir = Path(os.environ["DEMO_DIR"]) if os.getenv("DEMO_DIR") else None
+    private = os.getenv("PRIVATE_UPLOADS", "false").lower() == "true"
+    demo_cfg = DocumentStore.demo_config(demo_dir)
+
     @asynccontextmanager
     async def lifespan(_app):
-        # Load the embedding + reranker models in the background at startup; otherwise the
-        # first user's question pays ~20 s of model loading.
-        if os.getenv("WARMUP", "true").lower() == "true":
-            threading.Thread(
-                target=lambda: (retrieval.embed(["warm up"]), retrieval.reranker(settings.rerank_model).predict([("a", "b")])),
-                daemon=True,
-            ).start()
+        # Index demo PDFs and load the models in the background at startup; otherwise the
+        # first visitor's question pays ~20 s of model loading.
+        def startup():
+            if demo_dir and demo_dir.exists():
+                app.state.store.load_demo(demo_dir)
+            if os.getenv("WARMUP", "true").lower() == "true":
+                retrieval.embed(["warm up"])
+                retrieval.reranker(settings.rerank_model).predict([("a", "b")])
+
+        threading.Thread(target=startup, daemon=True).start()
         yield
 
     app = FastAPI(title="DocuMind API", version="2.0", lifespan=lifespan)
@@ -85,6 +94,13 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
     app.state.llm = llm or LLM()
     query_limit = RateLimiter(int(os.getenv("RATE_LIMIT_QUERIES", "30")), 600)
     upload_limit = RateLimiter(int(os.getenv("RATE_LIMIT_UPLOADS", "10")), 3600)
+
+    def viewer(req: Request) -> str | None:
+        """Who is asking, when uploads are private. None means everyone sees everything."""
+        if not private:
+            return None
+        cid = req.headers.get("x-client-id", "")
+        return cid if 8 <= len(cid) <= 64 and cid.replace("-", "").isalnum() else ""
 
     @app.get("/api/health")
     def health():
@@ -102,12 +118,14 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
             },
             "options": {"chunking": list(STRATEGIES), "retrieval": list(MODES)},
             "max_upload_mb": settings.max_upload_mb,
+            "sample_questions": demo_cfg.get("questions", []),
+            "private_uploads": private,
         }
 
     # ---- documents ----
     @app.get("/api/documents")
-    def list_documents():
-        return app.state.store.list()
+    def list_documents(request: Request):
+        return app.state.store.list(viewer(request))
 
     @app.post("/api/documents", status_code=201)
     async def upload(request: Request, file: UploadFile = File(...)):
@@ -118,18 +136,23 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
             raise HTTPException(413, f"PDF larger than {settings.max_upload_mb} MB")
         if not data.startswith(b"%PDF"):
             raise HTTPException(415, "Not a PDF file")
+        who = viewer(request)
+        if who == "":
+            raise HTTPException(400, "Missing X-Client-Id header")
         try:
             from starlette.concurrency import run_in_threadpool
 
-            meta = await run_in_threadpool(app.state.store.add, data, file.filename or "document.pdf")
+            meta = await run_in_threadpool(app.state.store.add, data, file.filename or "document.pdf", who)
         except ValueError as e:
             raise HTTPException(422, str(e)) from e
-        return {k: meta[k] for k in ("id", "title", "filename", "num_pages", "num_chunks", "created_at")}
+        return public_meta(meta)
 
     @app.delete("/api/documents/{doc_id}", status_code=204)
-    def delete_document(doc_id: str):
+    def delete_document(doc_id: str, request: Request):
         try:
-            app.state.store.delete(doc_id)
+            app.state.store.delete(doc_id, viewer(request))
+        except PermissionError:
+            raise HTTPException(403, "Demo documents can't be removed") from None
         except KeyError:
             raise HTTPException(404, "Document not found") from None
         return Response(status_code=204)
@@ -168,11 +191,15 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
         if not query_limit.allow(_client_key(request)):
             raise HTTPException(429, "Too many questions, try again in a few minutes")
         store: DocumentStore = app.state.store
-        docs = store.list()
+        who = viewer(request)
+        docs = store.list(who)
         if not docs:
             raise HTTPException(400, "Upload a PDF first")
         titles = {d["id"]: d["title"] for d in docs}
-        allowed = set(q.doc_ids) & titles.keys() if q.doc_ids else None
+        if q.doc_ids:
+            allowed = set(q.doc_ids) & titles.keys()
+        else:  # in private mode, never search other visitors' uploads
+            allowed = set(titles) if who is not None else None
         index = store.index(q.chunking)
 
         def events():
@@ -213,7 +240,7 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
             qid = app.state.log.log(
                 question=q.question,
                 answer=res.answer,
-                doc_ids=sorted(allowed) if allowed else [],
+                doc_ids=sorted(allowed) if q.doc_ids else [],
                 chunking=q.chunking,
                 retrieval=q.retrieval,
                 rerank=int(q.rerank),
@@ -242,6 +269,7 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
                 cost_usd=cost,
                 not_found=int(res.not_found),
                 error=error,
+                client=who,
             )
             if error is None:
                 yield _sse(
@@ -270,8 +298,8 @@ def create_app(store: DocumentStore | None = None, log: QueryLog | None = None, 
         return app.state.log.summary(since=time.time() - days * 86400)
 
     @app.get("/api/queries")
-    def queries(limit: int = 50, offset: int = 0):
-        return app.state.log.recent(min(limit, 200), offset)
+    def queries(request: Request, limit: int = 50, offset: int = 0):
+        return app.state.log.recent(min(limit, 200), offset, viewer(request))
 
     # ---- front end (built React app) ----
     static = Path(os.getenv("STATIC_DIR", Path(__file__).resolve().parents[1] / "static")).resolve()

@@ -31,6 +31,9 @@ class Settings:
 
     embed_model: str = field(default_factory=lambda: _env("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2"))
     rerank_model: str = field(default_factory=lambda: _env("RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"))
+    # Reranking costs CPU time per candidate token, so these two settings set its latency.
+    rerank_candidates: int = field(default_factory=lambda: int(_env("RERANK_CANDIDATES", "20")))
+    rerank_max_length: int = field(default_factory=lambda: int(_env("RERANK_MAX_LENGTH", "256")))
 
     # Defaults used by the API; the eval harness sweeps these.
     chunking: str = field(default_factory=lambda: _env("CHUNKING", "structure"))
