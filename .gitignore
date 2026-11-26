@@ -16,3 +16,6 @@ eval/.cache/
 # eval PDFs are committed so the numbers are reproducible
 !eval/docs/*.pdf
 *.tsbuildinfo
+!frontend/public/demo/*.pdf
+.env.local
+.vercel

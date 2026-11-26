@@ -3,7 +3,7 @@
 Ask questions about your PDFs and get answers that cite the exact page and passage. Each
 retrieval choice in the pipeline was measured on a fixed eval set before it went in.
 
-**Live demo:** _coming soon_ · v1 (Streamlit): https://rag-pdf-chatbot-amaan.streamlit.app/
+**Live demo:** _coming soon (deploying on Vercel)_ · v1 (Streamlit): https://rag-pdf-chatbot-amaan.streamlit.app/
 
 ## Results
 
@@ -128,10 +128,11 @@ cd backend; ..\.venv\Scripts\uvicorn documind.api:app --reload --port 8000
 In a second terminal:
 
 ```powershell
-cd frontend; npm install; npm run dev
+cd frontend; npm install; npm run dev:server
 ```
 
-Open http://localhost:5173. Vite proxies `/api` to the backend.
+Open http://localhost:5173. Vite proxies `/api` to the backend. (`npm run dev` instead runs the
+browser engine, which needs no backend; see [Two ways to run it](#two-ways-to-run-it).)
 
 ### Tests
 
@@ -148,35 +149,65 @@ The tests use a small generated PDF and stand-in models, so they run offline in 
 .venv\Scripts\python eval\run_eval.py --update-readme
 ```
 
-## Deploy
+## Two ways to run it
 
-The image serves both the API and the front end on one port, so it runs on any container host.
-The live demo runs on a Hugging Face Docker Space (free CPU tier), deployed by
-[a GitHub Action](.github/workflows/deploy-hf-space.yml) on every push to `master`.
+The same React app runs on either of two engines:
 
-One-time setup:
+| | Browser engine (live demo) | Server engine (Docker) |
+|---|---|---|
+| Where retrieval runs | The visitor's device (transformers.js + ONNX) | FastAPI (PyTorch, FAISS) |
+| Server needed | One small function that calls Groq | A container with about 1 GB of RAM |
+| Hosting | Any static host; free on Vercel | Any container host |
+| Uploaded PDFs | Parsed and indexed in the browser; never uploaded | Stored on the server, private to each browser |
+| Query log | This browser's own questions | All queries, in SQLite |
 
-1. On Hugging Face, create a Space with the **Docker** SDK (blank template).
-2. In the Space's settings, add the secret `GROQ_API_KEY`.
-3. Create a Hugging Face access token with **write** permission.
-4. In this GitHub repo's settings, add that token as the Actions secret `HF_TOKEN`. Then add the
-   Actions variable `HF_SPACE` with the Space's name, like `your-hf-username/documind`.
-5. Run the workflow once from the Actions tab, or push to `master`.
+### Browser engine: how it works
 
-The workflow mirrors the repo to the Space and swaps in [deploy/hf-space/README.md](deploy/hf-space/README.md),
-which holds the settings Hugging Face reads.
+- **Demo documents** are indexed ahead of time by the Python pipeline
+  ([deploy/build_static.py](deploy/build_static.py)) and served as static files: the same chunks
+  and embeddings the eval used.
+- **Search runs in the browser.** The embedding model and reranker run in the browser via
+  transformers.js, and BM25 and rank fusion are ported to TypeScript
+  ([frontend/src/engine](frontend/src/engine)). The models (39 MB) and ONNX Runtime (about 7 MB
+  compressed) download on the first visit and are cached by the browser.
+- **One serverless function.** [frontend/api/chat.ts](frontend/api/chat.ts) holds the Groq key,
+  builds the prompt and streams the answer. It's the only server code. The prompt is fixed on
+  the server and inputs are capped, so it can't be used as a general-purpose LLM proxy.
+- **Uploaded PDFs never leave the browser.** pdf.js parses them on the visitor's device; only the
+  passages used for an answer are sent to the model.
 
-How the public demo behaves:
+**Parity with the Python pipeline**, checked by [frontend/scripts/parity.ts](frontend/scripts/parity.ts)
+and [parity-upload.ts](frontend/scripts/parity-upload.ts) on the eval set:
 
-- **Preloaded documents.** The three eval PDFs are indexed when the image is built, so the demo
-  is ready as soon as the container starts. Visitors can't remove them.
-- **Private uploads.** Each browser gets a random ID (`PRIVATE_UPLOADS=true`). Visitors see
-  only their own uploads and their own query log; dashboard totals cover everyone.
-- **Rate limits.** Each visitor can ask 30 questions per 10 minutes (`RATE_LIMIT_QUERIES`) and
-  upload 10 PDFs per hour, so the demo can't drain the API key. Also set a spending limit in the
-  Groq console.
-- **No persistence.** Free Spaces don't keep files between restarts, so uploads disappear when
-  the Space sleeps or restarts.
+| | Hit@5, v2 default | Notes |
+|---|---|---|
+| Python | 95% | The eval in the Results table |
+| Browser, demo documents | **95%** | Identical. With full-precision models, all 12 configs match Python exactly. The shipped mix (compressed embedder, full-precision reranker) matches the v2 default exactly and the other configs within one question. |
+| Browser, uploaded PDFs | 88% | pdf.js splits paragraphs a little differently from PyMuPDF, so chunk boundaries shift and the reranker sometimes prefers a neighbouring passage. |
+
+**Speed, measured on a laptop:**
+- **Warm search:** about 20 ms retrieval and 0.3–0.4 s reranking per question.
+- **First question:** about 10 s extra while the models download and load.
+- **Uploads:** a 17-page PDF indexes in about 27 s.
+
+### Deploy the browser engine on Vercel (free)
+
+1. Sign in at [vercel.com](https://vercel.com) with GitHub and import this repository.
+2. Set **Root Directory** to `frontend`. Vercel detects Vite; leave the build settings as they are.
+3. Under **Environment Variables**, add `GROQ_API_KEY`. Also set a spending limit in the Groq console.
+4. Deploy. Every push to `master` deploys again; pull requests get preview URLs.
+
+The function allows each visitor 30 questions per 10 minutes (`RATE_LIMIT_QUERIES`). This is best
+effort, because serverless instances don't share memory.
+
+To run the browser engine locally, from `frontend/`, use `npm run dev`. Put `GROQ_API_KEY=...`
+in `frontend/.env.local`, or set `FAKE_LLM=1` to get canned answers without a key.
+
+### Server engine (Docker)
+
+The Docker image builds the React app with `VITE_ENGINE=server` and serves it from FastAPI, with
+the three demo PDFs indexed at build time. Each browser sees only its own uploads and query log
+(`PRIVATE_UPLOADS=true`). It runs on any host that runs containers, as described in [Run it](#run-it).
 
 ## Configuration
 

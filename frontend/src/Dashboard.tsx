@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { api, LoggedQuery, Summary } from "./api";
+import { api, ENGINE, LoggedQuery, Summary } from "./api";
 import { fmtMs, fmtUsd } from "./ui";
 
 function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -159,8 +159,8 @@ export default function Dashboard() {
     <main className="dash">
       <div className="dash-inner">
         <div className="dash-head">
-          <h1>Queries, last 30 days</h1>
-          <span className="mono muted">refreshes every 15 s</span>
+          <h1>{ENGINE === "browser" ? "Your questions, last 30 days" : "Queries, last 30 days"}</h1>
+          <span className="mono muted">{ENGINE === "browser" ? "stored in this browser only" : "refreshes every 15 s"}</span>
         </div>
         <div className="tiles">
           <Tile label="Questions answered" value={s.queries.toLocaleString()} sub={s.errors ? `${s.errors} failed` : "none failed"} />

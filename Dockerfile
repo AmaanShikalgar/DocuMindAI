@@ -4,7 +4,7 @@ WORKDIR /web
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
-RUN npm run build
+RUN npm run build:server
 
 # ---- API + static site ----
 FROM python:3.11-slim

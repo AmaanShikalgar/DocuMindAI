@@ -11,3 +11,4 @@ backend/tests
 .env
 # ...except the demo PDFs (patterns are applied in order; the last match wins)
 !eval/docs/*.pdf
+frontend/public/demo

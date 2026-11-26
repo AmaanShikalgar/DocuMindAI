@@ -1,0 +1,638 @@
+[
+ {
+  "id": "q01",
+  "question": "What are the CSF Functions?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 31,
+    "start": 1089,
+    "end": 1174
+   }
+  ]
+ },
+ {
+  "id": "q02",
+  "question": "What are the four CSF Tiers called?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 31,
+    "start": 2191,
+    "end": 2298
+   }
+  ]
+ },
+ {
+  "id": "q03",
+  "question": "What is a Community Profile?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 11,
+    "start": 1290,
+    "end": 1440
+   }
+  ]
+ },
+ {
+  "id": "q04",
+  "question": "What does a Current Profile describe?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 11,
+    "start": 763,
+    "end": 879
+   }
+  ]
+ },
+ {
+  "id": "q05",
+  "question": "What kinds of changes should a Target Profile anticipate?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 11,
+    "start": 1114,
+    "end": 1288
+   }
+  ]
+ },
+ {
+  "id": "q06",
+  "question": "What are Quick-Start Guides?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 14,
+    "start": 1949,
+    "end": 2071
+   }
+  ]
+ },
+ {
+  "id": "q07",
+  "question": "What do Informative References point to?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 6,
+    "start": 1854,
+    "end": 2004
+   }
+  ]
+ },
+ {
+  "id": "q08",
+  "question": "What is the outcome of the Cybersecurity Supply Chain Risk Management category (GV.SC)?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 22,
+    "start": 1895,
+    "end": 2001
+   }
+  ]
+ },
+ {
+  "id": "q09",
+  "question": "What does subcategory PR.AA-02 say?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 24,
+    "start": 2075,
+    "end": 2160
+   }
+  ]
+ },
+ {
+  "id": "q10",
+  "question": "Which subcategory covers monitoring external service providers?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 26,
+    "start": 862,
+    "end": 971
+   }
+  ]
+ },
+ {
+  "id": "q11",
+  "question": "What does RC.RP-02 require for recovery actions?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 28,
+    "start": 91,
+    "end": 156
+   }
+  ]
+ },
+ {
+  "id": "q12",
+  "question": "How is cybersecurity risk strategy applied at Tier 1 for governance?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 29,
+    "start": 512,
+    "end": 605
+   }
+  ]
+ },
+ {
+  "id": "q13",
+  "question": "What is the first step in creating and using an Organizational Profile?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 12,
+    "start": 81,
+    "end": 114
+   }
+  ]
+ },
+ {
+  "id": "q14",
+  "question": "What is the purpose of the DETECT function?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 9,
+    "start": 938,
+    "end": 1007
+   },
+   {
+    "doc_id": "3c31f46fee98",
+    "page": 26,
+    "start": 370,
+    "end": 439
+   }
+  ]
+ },
+ {
+  "id": "q15",
+  "question": "Where in the input context do language models use relevant information best?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 2,
+    "start": 1540,
+    "end": 1691
+   }
+  ]
+ },
+ {
+  "id": "q16",
+  "question": "What was GPT-3.5-Turbo's closed-book accuracy on multi-document QA?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 2,
+    "start": 2006,
+    "end": 2082
+   }
+  ]
+ },
+ {
+  "id": "q17",
+  "question": "How were the distractor documents collected?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 3,
+    "start": 3756,
+    "end": 3817
+   }
+  ]
+ },
+ {
+  "id": "q18",
+  "question": "Which dataset is the multi-document QA task built from?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 3,
+    "start": 2945,
+    "end": 3006
+   }
+  ]
+ },
+ {
+  "id": "q19",
+  "question": "What are the keys and values in the synthetic key-value retrieval task?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 6,
+    "start": 160,
+    "end": 198
+   }
+  ]
+ },
+ {
+  "id": "q20",
+  "question": "How many key-value pairs were used in the key-value retrieval experiments?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 7,
+    "start": 881,
+    "end": 979
+   }
+  ]
+ },
+ {
+  "id": "q21",
+  "question": "How much does using 50 retrieved documents instead of 20 help?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 3,
+    "start": 1292,
+    "end": 1377
+   }
+  ]
+ },
+ {
+  "id": "q22",
+  "question": "When are encoder-decoder models robust to the position of relevant information?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 2,
+    "start": 3660,
+    "end": 3737
+   }
+  ]
+ },
+ {
+  "id": "q23",
+  "question": "What effect does query-aware contextualization have on the key-value retrieval task?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 8,
+    "start": 2728,
+    "end": 2819
+   }
+  ]
+ },
+ {
+  "id": "q24",
+  "question": "Does query-aware contextualization fix the position problem in multi-document QA?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 9,
+    "start": 91,
+    "end": 223
+   }
+  ]
+ },
+ {
+  "id": "q25",
+  "question": "How do 7B Llama-2 models behave compared with the 13B and 70B models?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 10,
+    "start": 24,
+    "end": 138
+   }
+  ]
+ },
+ {
+  "id": "q26",
+  "question": "Which effect from psychology do the authors relate their findings to?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 11,
+    "start": 2083,
+    "end": 2189
+   }
+  ]
+ },
+ {
+  "id": "q27",
+  "question": "Which open models were evaluated?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 1,
+    "start": 3242,
+    "end": 3278
+   }
+  ]
+ },
+ {
+  "id": "q28",
+  "question": "In the open-domain QA case study, how does reader performance compare with retriever recall as more documents are added?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "f37f6fabe0fe",
+    "page": 10,
+    "start": 1974,
+    "end": 2052
+   }
+  ]
+ },
+ {
+  "id": "q29",
+  "question": "What is the 2025 standard mileage rate for business use of a car?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 1,
+    "start": 2139,
+    "end": 2238
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 20,
+    "start": 2050,
+    "end": 2151
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 44,
+    "start": 5108,
+    "end": 5209
+   }
+  ]
+ },
+ {
+  "id": "q30",
+  "question": "What is the most I can deduct for business gifts to one person in a year?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 16,
+    "start": 4511,
+    "end": 4630
+   }
+  ]
+ },
+ {
+  "id": "q31",
+  "question": "What share of unreimbursed business meal costs can generally be deducted?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 7,
+    "start": 1524,
+    "end": 1596
+   }
+  ]
+ },
+ {
+  "id": "q32",
+  "question": "What meal deduction percentage applies to workers under DOT hours of service limits?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 15,
+    "start": 203,
+    "end": 262
+   }
+  ]
+ },
+ {
+  "id": "q33",
+  "question": "How long can a work assignment last and still count as temporary?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 5,
+    "start": 883,
+    "end": 956
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 18,
+    "start": 353,
+    "end": 428
+   }
+  ]
+ },
+ {
+  "id": "q34",
+  "question": "How long do I have to return excess reimbursements under an accountable plan?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 43,
+    "start": 761,
+    "end": 852
+   }
+  ]
+ },
+ {
+  "id": "q35",
+  "question": "For foreign travel, how is \"one week\" defined?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 9,
+    "start": 4703,
+    "end": 4737
+   }
+  ]
+ },
+ {
+  "id": "q36",
+  "question": "When is a trip abroad lasting more than a week still treated as entirely for business?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 10,
+    "start": 787,
+    "end": 890
+   }
+  ]
+ },
+ {
+  "id": "q37",
+  "question": "What is the daily deduction limit for business travel by cruise ship?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 12,
+    "start": 275,
+    "end": 365
+   }
+  ]
+ },
+ {
+  "id": "q38",
+  "question": "What is my tax home?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 3,
+    "start": 4172,
+    "end": 4288
+   }
+  ]
+ },
+ {
+  "id": "q39",
+  "question": "If I have more than one regular place of business, which one is my tax home?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 4,
+    "start": 0,
+    "end": 98
+   }
+  ]
+ },
+ {
+  "id": "q40",
+  "question": "Who can use Form 2106?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 23,
+    "start": 5061,
+    "end": 5246
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 26,
+    "start": 3759,
+    "end": 3944
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 41,
+    "start": 2210,
+    "end": 2395
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 42,
+    "start": 171,
+    "end": 356
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 45,
+    "start": 1653,
+    "end": 1838
+   },
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 47,
+    "start": 849,
+    "end": 1034
+   }
+  ]
+ },
+ {
+  "id": "q41",
+  "question": "Which items under $4 don't count toward the gift limit?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 17,
+    "start": 1772,
+    "end": 1832
+   }
+  ]
+ },
+ {
+  "id": "q42",
+  "question": "Is a job I expect to last under a year always treated as temporary?",
+  "answerable": true,
+  "spans": [
+   {
+    "doc_id": "ddc3bb15e437",
+    "page": 5,
+    "start": 2515,
+    "end": 2659
+   }
+  ]
+ },
+ {
+  "id": "q43",
+  "question": "How much does NIST charge for CSF 2.0 certification?",
+  "answerable": false,
+  "spans": []
+ },
+ {
+  "id": "q44",
+  "question": "Which countries require CSF 2.0 by law?",
+  "answerable": false,
+  "spans": []
+ },
+ {
+  "id": "q45",
+  "question": "How did Gemini perform on the multi-document QA task?",
+  "answerable": false,
+  "spans": []
+ },
+ {
+  "id": "q46",
+  "question": "How many GPU hours did the experiments take?",
+  "answerable": false,
+  "spans": []
+ },
+ {
+  "id": "q47",
+  "question": "What is the per diem lodging rate for Honolulu in 2025?",
+  "answerable": false,
+  "spans": []
+ },
+ {
+  "id": "q48",
+  "question": "What is the standard mileage rate for 2030?",
+  "answerable": false,
+  "spans": []
+ }
+]
