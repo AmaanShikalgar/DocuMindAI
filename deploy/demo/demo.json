@@ -1,0 +1,13 @@
+{
+  "titles": {
+    "nist-csf-2.0.pdf": "NIST Cybersecurity Framework 2.0",
+    "irs-p463-2025.pdf": "IRS Publication 463 (2025)",
+    "lost-in-the-middle.pdf": "Lost in the Middle (Liu et al., 2024)"
+  },
+  "questions": [
+    "What are the four CSF Tiers called?",
+    "What is the 2025 standard mileage rate for business use of a car?",
+    "How much does using 50 retrieved documents instead of 20 help?",
+    "Which subcategory covers monitoring external service providers?"
+  ]
+}

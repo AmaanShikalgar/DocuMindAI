@@ -51,6 +51,13 @@ def run(
     """Yields ("sources", hits) once, then ("token", text) deltas. `res` is filled in as it goes."""
     res = res or Result()
     t0 = time.perf_counter()
+    try:
+        yield from _run(question, index, llm, mode, rerank, k, allowed, titles, res, t0)
+    finally:  # recorded even when the model call fails, so the log shows where time went
+        res.total_ms = (time.perf_counter() - t0) * 1000
+
+
+def _run(question, index, llm, mode, rerank, k, allowed, titles, res, t0):
     res.hits = index.search(question, k=k, mode=mode, rerank=rerank, allowed=allowed, timings=res.timings)
     yield "sources", res.hits
     if not res.hits:
@@ -64,4 +71,3 @@ def run(
             parts.append(delta)
             yield "token", delta
         res.answer = "".join(parts).strip()
-    res.total_ms = (time.perf_counter() - t0) * 1000

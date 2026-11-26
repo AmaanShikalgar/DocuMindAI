@@ -1,14 +1,40 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, Source } from "./api";
+import { getPdf } from "./engine/pdfjs-browser";
 import { ExternalIcon, XIcon } from "./ui";
 
-/** The cited page rendered as an image, with the passage's exact rectangles highlighted. */
+/** The cited page, rendered with pdf.js, with the passage's exact rectangles highlighted. */
 export default function CitationViewer({ source, onClose }: { source: Source; onClose: () => void }) {
   const [w, h] = source.page_size;
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const wrap = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    first.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-  }, [source.id]);
+    let cancelled = false;
+    let task: { cancel: () => void; promise: Promise<void> } | null = null;
+    setError("");
+    (async () => {
+      const pdf = await getPdf(source.doc_id, api.pdfSource(source.doc_id));
+      const page = await pdf.getPage(source.page);
+      const el = canvas.current;
+      if (cancelled || !el || !wrap.current) return;
+      const base = page.getViewport({ scale: 1 });
+      const scale = (wrap.current.clientWidth / base.width) * Math.min(window.devicePixelRatio || 1, 2);
+      const vp = page.getViewport({ scale });
+      el.width = vp.width;
+      el.height = vp.height;
+      task = page.render({ canvas: el, viewport: vp });
+      await task.promise;
+      if (!cancelled) first.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    })().catch((e) => !cancelled && e?.name !== "RenderingCancelledException" && setError("Couldn't render this page"));
+    return () => {
+      cancelled = true;
+      task?.cancel();
+    };
+  }, [source.doc_id, source.page, source.id]);
+
   return (
     <aside className="viewer" aria-label="Cited passage">
       <header>
@@ -26,8 +52,8 @@ export default function CitationViewer({ source, onClose }: { source: Source; on
         </div>
       </header>
       <div className="page-wrap">
-        <div className="page" style={{ aspectRatio: `${w} / ${h}` }}>
-          <img src={api.pageUrl(source.doc_id, source.page)} alt={`Page ${source.page} of ${source.title}`} />
+        <div className="page" ref={wrap} style={{ aspectRatio: `${w} / ${h}` }}>
+          <canvas ref={canvas} aria-label={`Page ${source.page} of ${source.title}`} />
           {source.rects.map((r, i) => (
             <div
               key={i}
@@ -41,6 +67,7 @@ export default function CitationViewer({ source, onClose }: { source: Source; on
               }}
             />
           ))}
+          {error && <p className="page-error muted">{error}</p>}
         </div>
       </div>
       <blockquote className="passage">{source.text.replace(/-\n(?=[a-z])/g, "").replace(/\s*\n\s*/g, " ")}</blockquote>

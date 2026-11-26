@@ -50,6 +50,40 @@ def test_upload_query_and_log(client, pdf_bytes):
     assert s["queries"] == 1 and s["tokens"]["prompt"] == 120
 
 
+def test_private_uploads_and_demo_docs(tmp_path, monkeypatch, pdf_bytes):
+    import pymupdf
+
+    monkeypatch.setenv("PRIVATE_UPLOADS", "true")
+    store = DocumentStore(tmp_path)
+    demo = tmp_path / "demo"
+    demo.mkdir()
+    d = pymupdf.open()
+    d.new_page().insert_text((72, 72), "Demo handbook: the office opens at nine.", fontsize=11)
+    (demo / "demo.pdf").write_bytes(d.tobytes())
+    (demo / "demo.json").write_text('{"titles": {"demo.pdf": "Demo handbook"}, "questions": ["When does the office open?"]}')
+    store.load_demo(demo)
+    monkeypatch.setenv("DEMO_DIR", str(demo))
+    c = TestClient(create_app(store, QueryLog(tmp_path / "q.db"), FakeLLM()))
+    alice, bob = {"X-Client-Id": "alice-0001"}, {"X-Client-Id": "bob-00002"}
+
+    assert c.get("/api/config").json()["sample_questions"] == ["When does the office open?"]
+    r = c.post("/api/documents", files={"file": ("policy.pdf", pdf_bytes, "application/pdf")}, headers=alice)
+    mine = r.json()["id"]
+    assert {x["title"] for x in c.get("/api/documents", headers=alice).json()} == {"Demo handbook", "policy"}
+    assert [x["title"] for x in c.get("/api/documents", headers=bob).json()] == ["Demo handbook"]
+
+    # Bob's questions never reach Alice's PDF, and logs stay per visitor
+    r = c.post("/api/query", json={"question": "How long do refunds take?"}, headers=bob)
+    assert all(s["title"] == "Demo handbook" for s in parse_sse(r.text)[0][1])
+    assert len(c.get("/api/queries", headers=bob).json()) == 1
+    assert c.get("/api/queries", headers=alice).json() == []
+
+    demo_id = next(x["id"] for x in c.get("/api/documents", headers=bob).json())
+    assert c.delete(f"/api/documents/{demo_id}", headers=bob).status_code == 403
+    assert c.delete(f"/api/documents/{mine}", headers=bob).status_code == 404
+    assert c.delete(f"/api/documents/{mine}", headers=alice).status_code == 204
+
+
 def test_rejects_non_pdf_and_bad_options(client, pdf_bytes):
     assert client.post("/api/documents", files={"file": ("x.pdf", b"hello", "application/pdf")}).status_code == 415
     assert client.post("/api/query", json={"question": "hi"}).status_code == 400

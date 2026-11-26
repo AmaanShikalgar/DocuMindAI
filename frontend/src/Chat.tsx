@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, ask, Config, Doc, Done, QueryOpts, Source } from "./api";
+import { api, ask, Config, Doc, Done, EngineStatus, QueryOpts, Source } from "./api";
 import CitationViewer from "./CitationViewer";
 import { fmtMs, fmtUsd, UploadIcon, XIcon } from "./ui";
 
@@ -70,6 +70,8 @@ export default function Chat() {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [progress, setProgress] = useState("");
+  const [engine, setEngine] = useState<EngineStatus>();
   const [viewing, setViewing] = useState<Source>();
   const end = useRef<HTMLDivElement>(null);
   const abort = useRef<AbortController>();
@@ -80,6 +82,10 @@ export default function Chat() {
       setOpts(c.defaults);
     });
     api.docs().then(setDocs);
+    const off = api.onStatus?.(setEngine);
+    return () => {
+      off?.();
+    };
   }, []);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" }); // newer browsers return a Promise; don't hand it to React
@@ -91,12 +97,13 @@ export default function Chat() {
     setNotice("");
     try {
       for (const f of Array.from(files)) {
-        const d = await api.upload(f);
+        const d = await api.upload(f, setProgress);
         setDocs((ds) => (ds.some((x) => x.id === d.id) ? ds : [...ds, d]));
       }
     } catch (e) {
       setNotice((e as Error).message);
     } finally {
+      setProgress("");
       setUploading(false);
     }
   }
@@ -107,9 +114,9 @@ export default function Chat() {
     setSelected((s) => new Set([...s].filter((x) => x !== id)));
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const question = q.trim();
+  async function submit(e?: React.FormEvent, preset?: string) {
+    e?.preventDefault();
+    const question = (preset ?? q).trim();
     if (!question || busy) return;
     setQ("");
     setBusy(true);
@@ -146,6 +153,7 @@ export default function Chat() {
             <UploadIcon />
             {uploading ? "Indexing" : "Upload PDF"}
           </label>
+          {progress && <p className="mono muted">{progress}</p>}
           {notice && <p className="error small">{notice}</p>}
           {docs.length === 0 && <p className="muted small">No documents yet</p>}
           <ul className="docs">
@@ -166,9 +174,13 @@ export default function Chat() {
                   <span className="doc-title">{d.title}</span>
                 </label>
                 <span className="mono muted">{d.num_pages} pp</span>
-                <button className="icon-btn" aria-label={`Remove ${d.title}`} onClick={() => remove(d.id)}>
-                  <XIcon />
-                </button>
+                {d.demo ? (
+                  <span className="icon-btn" aria-hidden="true" />
+                ) : (
+                  <button className="icon-btn" aria-label={`Remove ${d.title}`} onClick={() => remove(d.id)}>
+                    <XIcon />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -204,6 +216,12 @@ export default function Chat() {
             <input type="number" min={1} max={10} value={opts.top_k} onChange={(e) => setOpts({ ...opts, top_k: +e.target.value || 5 })} />
           </label>
           {cfg && <p className="mono muted">{cfg.model}</p>}
+          {engine && engine.state !== "idle" && (
+            <p className={`mono ${engine.state === "error" ? "error" : "muted"}`}>
+              {engine.message}
+              {engine.state === "loading" && engine.progress != null && engine.progress > 0 ? ` ${Math.round(engine.progress * 100)}%` : ""}
+            </p>
+          )}
         </section>
       </aside>
 
@@ -215,6 +233,20 @@ export default function Chat() {
               <p>
                 Every answer cites the page it came from. Select a <span className="cite">1</span> to see the passage highlighted on that page.
               </p>
+              {!!cfg?.sample_questions.length && docs.length > 0 && (
+                <div className="samples">
+                  {cfg.sample_questions.map((s) => (
+                    <button key={s} className="sample" onClick={() => submit(undefined, s)} disabled={busy}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {cfg?.engine === "browser" ? (
+                <p className="small muted">Search runs on your device. PDFs you upload never leave this browser; only the passages used for an answer are sent to the model.</p>
+              ) : (
+                cfg?.private_uploads && <p className="small muted">PDFs you upload are visible only in this browser</p>
+              )}
             </div>
           )}
           {turns.map((t, i) => (

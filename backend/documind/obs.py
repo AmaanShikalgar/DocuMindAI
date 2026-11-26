@@ -23,14 +23,15 @@ CREATE TABLE IF NOT EXISTS queries (
     retrieval_ms REAL, rerank_ms REAL, ttft_ms REAL, total_ms REAL,
     prompt_tokens INTEGER, completion_tokens INTEGER, cost_usd REAL,
     not_found INTEGER,
-    error TEXT
+    error TEXT,
+    client TEXT
 );
 CREATE INDEX IF NOT EXISTS queries_ts ON queries(ts);
 """
 
 COLS = (
     "ts question answer doc_ids chunking retrieval rerank top_k model retrieved retrieval_ms rerank_ms "
-    "ttft_ms total_ms prompt_tokens completion_tokens cost_usd not_found error"
+    "ttft_ms total_ms prompt_tokens completion_tokens cost_usd not_found error client"
 ).split()
 
 
@@ -41,6 +42,9 @@ class QueryLog:
         self._lock = threading.Lock()
         with self._conn() as c:
             c.executescript(SCHEMA)
+            cols = {r[1] for r in c.execute("PRAGMA table_info(queries)")}
+            if "client" not in cols:  # databases created before per-visitor logs
+                c.execute("ALTER TABLE queries ADD COLUMN client TEXT")
 
     def _conn(self) -> sqlite3.Connection:
         c = sqlite3.connect(self.path, timeout=10)
@@ -57,14 +61,17 @@ class QueryLog:
             cur = c.execute(f"INSERT INTO queries ({','.join(COLS)}) VALUES ({','.join('?' * len(COLS))})", vals)
             return int(cur.lastrowid)
 
-    def recent(self, limit: int = 50, offset: int = 0) -> list[dict]:
+    def recent(self, limit: int = 50, offset: int = 0, client: str | None = None) -> list[dict]:
+        """Latest queries; with `client`, only that visitor's own."""
+        where, args = ("WHERE client = ?", [client]) if client is not None else ("", [])
         with self._conn() as c:
-            rows = c.execute("SELECT * FROM queries ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+            rows = c.execute(f"SELECT * FROM queries {where} ORDER BY id DESC LIMIT ? OFFSET ?", (*args, limit, offset)).fetchall()
         out = []
         for r in rows:
             d = dict(r)
             for k in ("doc_ids", "retrieved"):
                 d[k] = json.loads(d[k]) if d[k] else []
+            d.pop("client", None)
             out.append(d)
         return out
 

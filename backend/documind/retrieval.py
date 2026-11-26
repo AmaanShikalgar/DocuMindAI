@@ -39,7 +39,7 @@ def reranker(name: str | None = None):
     from sentence_transformers import CrossEncoder
 
     with _lock:
-        return CrossEncoder(name or settings.rerank_model, device="cpu")
+        return CrossEncoder(name or settings.rerank_model, device="cpu", max_length=settings.rerank_max_length)
 
 
 def embed(texts: list[str]) -> np.ndarray:
@@ -123,11 +123,12 @@ class Index:
         k: int = 5,
         mode: str = "hybrid",
         rerank: bool = False,
-        candidates: int = 30,
+        candidates: int | None = None,
         allowed: set[str] | None = None,
         timings: Timings | None = None,
     ) -> list[Hit]:
         t0 = time.perf_counter()
+        candidates = candidates or settings.rerank_candidates
         pool = candidates if (rerank or mode == "hybrid") else k
         if allowed is not None:
             pool = len(self.chunks)  # filter after scoring; corpora here are small
