@@ -83,8 +83,11 @@ export default async function handler(req: Request): Promise<Response> {
       const send = (e: string, d: unknown) => controller.enqueue(enc.encode(sse(e, d)));
       try {
         if (fake) {
-          for (const w of `This is a stand-in answer (FAKE_LLM=1); the top passage is [1].`.split(" ")) {
-            send("token", w + " ");
+          const canned = `Stand-in answer (FAKE_LLM=1) built from the retrieved passages:
+- **Top passage** [1]
+- Next passage [2]`;
+          for (const w of canned.split(/(?<= )/)) {
+            send("token", w);
             await new Promise((r) => setTimeout(r, 30));
           }
           send("done", { prompt_tokens: 600, completion_tokens: 20, cost_usd: (600 * priceIn + 20 * priceOut) / 1e6, model: "fake" });
