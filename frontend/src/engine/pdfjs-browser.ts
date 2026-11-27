@@ -1,7 +1,9 @@
 /** pdf.js set up for the browser (worker bundled by Vite), plus a small cache of open documents
  * for the page viewer. */
-import * as pdfjs from "pdfjs-dist";
-import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import "./stream-polyfill";
+// Legacy build: it polyfills newer JS (e.g. Map.getOrInsertComputed) that iOS Safari lacks.
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import workerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
