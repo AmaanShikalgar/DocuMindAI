@@ -1,5 +1,6 @@
 import { Fragment, ReactNode } from "react";
 import type { Source } from "./api";
+import { normalizeCitations } from "./citations";
 
 /** Renders an LLM answer: paragraphs, "-" / "1." lists, **bold**, `code`, and [n] citations as
  * buttons. Deliberately small: anything else stays plain text (never HTML from the model). */
@@ -36,7 +37,7 @@ export default function AnswerText({
 
   // group lines into paragraphs and lists
   const blocks: { kind: "p" | "ul" | "ol"; lines: string[] }[] = [];
-  for (const raw of text.split("\n")) {
+  for (const raw of normalizeCitations(text).split("\n")) {
     const line = raw.trimEnd();
     const bullet = line.match(/^\s*[-*•]\s+(.*)$/);
     const numbered = line.match(/^\s*\d+[.)]\s+(.*)$/);

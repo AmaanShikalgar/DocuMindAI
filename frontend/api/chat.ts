@@ -12,7 +12,7 @@ const SYSTEM = `You answer questions using only the numbered sources provided.
 
 Rules:
 - Use only facts stated in the sources. Do not use outside knowledge.
-- Cite every claim with the source number in square brackets, e.g. [2] or [1][3].
+- Cite every claim with the source number in square brackets, e.g. [2] or [1][3]. Use exactly this format: no other brackets, line references or citation styles.
 - If the sources do not contain the answer, reply exactly: ${NOT_FOUND}
 - Be concise: 1-3 sentences unless the question asks for a list or steps.
 - Do not mention "the sources" or "the context" in the answer.`;

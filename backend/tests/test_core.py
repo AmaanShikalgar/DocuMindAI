@@ -41,3 +41,10 @@ def test_hybrid_and_rerank(pdf_bytes):
     hits = idx.search("warranty defects", k=1, mode="hybrid", rerank=True)
     assert hits[0].chunk.section == "2. Warranty" and hits[0].rerank_score is not None
     assert idx.search("warranty", k=3, allowed={"other"}) == []
+
+
+def test_normalize_citations():
+    from documind.llm import normalize_citations
+
+    assert normalize_citations("Tier 4)【1†L1-L4】【3†L4-L7】") == "Tier 4)[1][3]"
+    assert normalize_citations("gain [1, 2] and [4†L3] and 【5】") == "gain [1][2] and [4] and [5]"
