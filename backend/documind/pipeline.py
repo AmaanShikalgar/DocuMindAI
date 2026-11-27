@@ -6,7 +6,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from .llm import LLM, NOT_FOUND, Usage, build_messages
+from .llm import LLM, NOT_FOUND, Usage, build_messages, normalize_citations
 from .retrieval import Hit, Index, Timings
 
 _CITE = re.compile(r"\[(\d+)\]")
@@ -70,4 +70,4 @@ def _run(question, index, llm, mode, rerank, k, allowed, titles, res, t0):
                 res.ttft_ms = (time.perf_counter() - t0) * 1000
             parts.append(delta)
             yield "token", delta
-        res.answer = "".join(parts).strip()
+        res.answer = normalize_citations("".join(parts).strip())

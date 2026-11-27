@@ -1,6 +1,7 @@
 """Prompting and streaming generation via Groq, with token usage captured for cost logging."""
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 
@@ -9,11 +10,23 @@ from .retrieval import Hit
 
 NOT_FOUND = "I cannot find this in the document."
 
+_CITE_FANCY = re.compile(r"【\s*(\d+)(?:†[^】]*)?\s*】")
+_CITE_DAGGER = re.compile(r"\[(\d+)†[^\]]*\]")
+_CITE_LIST = re.compile(r"\[(\d+(?:\s*,\s*\d+)+)\]")
+
+
+def normalize_citations(text: str) -> str:
+    """gpt-oss sometimes cites as 【1†L1-L4】 or [1, 3]; rewrite every variant as [1][3]."""
+    text = _CITE_FANCY.sub(lambda m: f"[{m.group(1)}]", text)
+    text = _CITE_DAGGER.sub(lambda m: f"[{m.group(1)}]", text)
+    return _CITE_LIST.sub(lambda m: "".join(f"[{n.strip()}]" for n in m.group(1).split(",")), text)
+
+
 SYSTEM = f"""You answer questions using only the numbered sources provided.
 
 Rules:
 - Use only facts stated in the sources. Do not use outside knowledge.
-- Cite every claim with the source number in square brackets, e.g. [2] or [1][3].
+- Cite every claim with the source number in square brackets, e.g. [2] or [1][3]. Use exactly this format: no other brackets, line references or citation styles.
 - If the sources do not contain the answer, reply exactly: {NOT_FOUND}
 - Be concise: 1-3 sentences unless the question asks for a list or steps.
 - Do not mention "the sources" or "the context" in the answer."""

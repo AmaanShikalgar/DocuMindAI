@@ -10,6 +10,7 @@ import { parsePdf } from "../engine/pdf";
 import { forgetPdf, pdfjs } from "../engine/pdfjs-browser";
 import { Chunk, Hit, Index, indexText, Timings } from "../engine/retrieval";
 import { readSse } from "../sse";
+import { citedNumbers, normalizeCitations } from "../citations";
 
 type Strategy = "fixed" | "structure";
 type DocMeta = Doc & { page_sizes: Record<string, [number, number]> };
@@ -295,7 +296,8 @@ export async function browserAsk(body: AskBody, on: AskHandlers, signal?: AbortS
     on.error(error);
   }
   const total = performance.now() - t0;
-  const cited = [...new Set([...answer.matchAll(/\[(\d+)\]/g)].map((m) => +m[1]))].filter((n) => n >= 1 && n <= hits.length);
+  answer = normalizeCitations(answer);
+  const cited = citedNumbers(answer, hits.length);
   const notFound = answer.toLowerCase().includes(NOT_FOUND.toLowerCase().replace(/\.$/, ""));
   const done: Done = {
     query_id: Date.now(),

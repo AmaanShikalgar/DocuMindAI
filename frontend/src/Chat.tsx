@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ask, Config, Doc, Done, EngineStatus, QueryOpts, Source } from "./api";
 import AnswerText from "./AnswerText";
+import { citedNumbers } from "./citations";
 import CitationViewer from "./CitationViewer";
 import { fmtMs, fmtUsd, UploadIcon, XIcon } from "./ui";
 
@@ -27,9 +28,8 @@ function snippet(text: string, question: string, max = 170): string {
 }
 
 function Answer({ turn, onCite, active, engine, docCount }: { turn: Turn; onCite: (s: Source) => void; active?: string; engine?: EngineStatus; docCount: number }) {
-  const byN = new Map(turn.sources.map((s) => [s.n, s]));
   const question = turn.q;
-  const cited = turn.done?.cited ?? [...new Set([...turn.answer.matchAll(/\[(\d+)\]/g)].map((m) => +m[1]))].filter((n) => byN.has(n));
+  const cited = turn.done?.cited ?? citedNumbers(turn.answer, turn.sources.length);
   const [showAll, setShowAll] = useState(false);
   const listed = showAll ? turn.sources : turn.sources.filter((s) => cited.includes(s.n));
   return (
