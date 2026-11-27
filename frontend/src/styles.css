@@ -211,3 +211,23 @@ tr.detail p { margin: 0 0 8px; }
 .sample { min-height: 36px; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface); color: var(--text); text-align: left; transition: background-color 150ms var(--ease); }
 .sample:hover:not(:disabled) { background: var(--raised); }
 .sample:disabled { opacity: 0.5; cursor: default; }
+
+/* ---- polish pass: answers, progress, proof line, source link ---- */
+.answer-text { white-space: normal; }
+.answer-text p { margin: 0 0 8px; }
+.answer-text p:last-child { margin-bottom: 0; }
+.answer-text ul, .answer-text ol { margin: 0 0 8px; padding-left: 20px; }
+.answer-text li { margin: 4px 0; }
+.answer-text li::marker { color: var(--muted); }
+.answer-text strong { font-weight: 500; }
+.answer-text code { font-family: var(--mono); font-size: 13px; padding: 1px 4px; border-radius: 4px; background: var(--raised); }
+.pending { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); }
+/* live state, so it may move: a soft fade on the highlighter dot while work is in progress */
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--hl-strong); animation: fade 1.2s var(--ease) infinite alternate; }
+@keyframes fade { from { opacity: 1; } to { opacity: 0.3; } }
+.proof { margin: 0 0 12px !important; font-size: 12px !important; color: var(--muted) !important; }
+.source-link { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; color: var(--text-2); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+.source-link:hover { background: var(--raised); color: var(--text); }
+.docs li { height: auto; min-height: 36px; padding-top: 6px; padding-bottom: 6px; }
+.doc-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 20px; }
+@media (max-width: 860px) { .source-link { padding: 0 8px; font-size: 0; gap: 0; } }
