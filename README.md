@@ -3,7 +3,9 @@
 Ask questions about your PDFs and get answers that cite the exact page and passage. Each
 retrieval choice in the pipeline was measured on a fixed eval set before it went in.
 
-**Live demo:** _coming soon (deploying on Vercel)_ · v1 (Streamlit): https://rag-pdf-chatbot-amaan.streamlit.app/
+**Live demo:** https://frontend-five-eta-rszde1se60.vercel.app/ (search runs in your browser; free to try)
+
+v1 (Streamlit): https://rag-pdf-chatbot-amaan.streamlit.app/
 
 ## Results
 
